@@ -138,6 +138,83 @@ fn puzzle2(input: &str) {
     println!("My score: {} My real score: {}", score, real_score);
 }
 
+fn to_priority(c: char) -> usize {
+    match c {
+        'a'..='z' => c as usize - 'a' as usize + 1,
+        'A'..='Z' => c as usize - 'A' as usize + 27,
+        _ => {
+            panic!()
+        }
+    }
+}
+
+fn puzzle3(input: &str) {
+    let rucksacks = input.split('\n');
+    let mut priority_accumulator = 0;
+
+    for rucksack in rucksacks {
+        let mut has_type: [(bool, bool); 52] = [(false, false); 52];
+        let (first_half, second_half) = rucksack.split_at(rucksack.len() / 2);
+
+        for item in first_half.chars() {
+            has_type[to_priority(item) - 1].0 = true;
+        }
+
+        for item in second_half.chars() {
+            let priority = to_priority(item);
+            if has_type[priority - 1].0 && !has_type[priority - 1].1 {
+                priority_accumulator += to_priority(item);
+            }
+            has_type[priority - 1].1 = true;
+        }
+    }
+
+    println!("Accumulated priority: {}", priority_accumulator);
+}
+
+fn puzzle3_part2(input: &str) {
+    // I could have done it functionally, but I wanted to save on the accumulation pass.
+    let mut rucksacks = input.lines().into_iter();
+    let mut priority_accumulator = 0;
+
+    loop {
+        let group: (&str, &str, &str) = (
+            match rucksacks.next() {
+                Some(x) => x,
+                None => break,
+            },
+            match rucksacks.next() {
+                Some(x) => x,
+                None => break,
+            },
+            match rucksacks.next() {
+                Some(x) => x,
+                None => break,
+            },
+        );
+
+        let mut has_type: [(bool, bool, bool); 52] = [(false, false, false); 52];
+
+        for item in group.0.chars() {
+            has_type[to_priority(item) - 1].0 = true;
+        }
+
+        for item in group.1.chars() {
+            has_type[to_priority(item) - 1].1 = true;
+        }
+
+        for item in group.2.chars() {
+            let priority = to_priority(item);
+            if has_type[priority - 1].0 && has_type[priority - 1].1 && !has_type[priority - 1].2 {
+                priority_accumulator += priority;
+            }
+            has_type[priority - 1].2 = true;
+        }
+    }
+
+    println!("Accumulated priority for badges: {}", priority_accumulator);
+}
+
 fn run_puzzle(fname: &str, f: &dyn Fn(&str)) {
     println!("Input file {}:", fname);
 
@@ -150,4 +227,8 @@ fn main() {
     run_puzzle("puzzle1_1.txt", &puzzle1);
     run_puzzle("puzzle2_0.txt", &puzzle2);
     run_puzzle("puzzle2_1.txt", &puzzle2);
+    run_puzzle("puzzle3_0.txt", &puzzle3);
+    run_puzzle("puzzle3_1.txt", &puzzle3);
+    run_puzzle("puzzle3_0.txt", &puzzle3_part2);
+    run_puzzle("puzzle3_1.txt", &puzzle3_part2);
 }
